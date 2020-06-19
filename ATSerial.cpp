@@ -135,7 +135,25 @@ bool ATSerial::sendCmdAndCheckRsp(const char* cmd, const char* prefix, char* res
   #endif
 	return true;
 }
-
+char ATSerial::sendCmdAndCheckRsp(const char* cmd, const char* prefix, char* resp_buffer)
+{
+	uint8_t resend_cnt = 0;
+	ATWrite(cmd);
+	while(!checkResponse(prefix, resp_buffer)){
+		resend_cnt++;
+		if(resend_cnt > _max_resend_cnt){
+			return false;
+		}
+		ATWrite(cmd);
+	}
+  #if DEBUG_EN
+    debug.print(F("AT cmd ===>: "));
+    debug.println(cmd);
+    debug.print(F("RESP <===: "));
+    debug.println(resp_buffer);
+  #endif
+	return resp_buffer;
+}
 bool ATSerial::waitForData(uint8_t *recv_msg,uint32_t *chars_read)
 {
   int recv_len = 0;
